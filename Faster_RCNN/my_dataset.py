@@ -31,10 +31,11 @@ class VOC2012DataSet(Dataset):
         assert os.path.exists(txt_path), "not found {} file".format(txt_name)
 
         # -----------------------------------------------------------------------#
-        # 读取xml文件,将其中的换行符通过line.strip()去掉,再加上.xml后缀
+        # 读取xml文件,将其中的换行符通过line.strip()去掉,再加上.xml后缀,得到xml_list
         # -----------------------------------------------------------------------#
         with open(txt_path) as read:
-            self.xml_list = [os.path.join(self.annotations_root, line.strip() + ".xml") for line in read.readlines()]
+            self.xml_list = [os.path.join(self.annotations_root, line.strip() + ".xml")
+                             for line in read.readlines()]
 
         # -----------------------------------------------------------------------#
         # 检查文件中是否有信息存在
@@ -44,7 +45,7 @@ class VOC2012DataSet(Dataset):
             assert os.path.exists(xml_path), "not found '{}' file".format(xml_path)
 
         # -----------------------------------------------------------------------#
-        # 读取类别字典的json文件
+        # 读取类别字典的json文件,得到class_dict
         # -----------------------------------------------------------------------#
         json_file = './pascal_voc_classes.json'
         assert os.path.exists(json_file), "{} file not exist".format(json_file)
@@ -57,17 +58,17 @@ class VOC2012DataSet(Dataset):
         return len(self.xml_list)
 
     def __getitem__(self, item):
-        # read xml
+        # 获取xml文件路径,打开xml文件,
         xml_path = self.xml_list[item]
         with open(xml_path) as fid:
             xml_str = fid.read()
+        # 通过etree读取文件
         xml = etree.fromstring(xml_str)
         data = self.parse_xml_to_dict(xml)["annotation"]
         img_path = os.path.join(self.img_root, data["filename"])
         image = Image.open(img_path)
         if image.format != "JPEG":
             raise ValueError("Image '{}' format not JPEG".format(img_path))
-
 
         boxes = []
         labels = []
@@ -115,6 +116,7 @@ class VOC2012DataSet(Dataset):
         data_width = int(data["size"]["width"])
         return data_height, data_width
 
+    # 解析xml文件,以字典形式存储
     def parse_xml_to_dict(self, xml):
         """
         将xml文件解析成字典形式，参考tensorflow的recursive_parse_xml_to_dict
@@ -158,6 +160,7 @@ data_transform = {
 
 # load train data set
 train_data_set = VOC2012DataSet(os.getcwd(), data_transform["train"], True)
+print(train_data_set)
 print(len(train_data_set))
 for index in random.sample(range(0, len(train_data_set)), k=5):
     img, target = train_data_set[index]
